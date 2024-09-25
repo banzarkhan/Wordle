@@ -14,7 +14,7 @@ class ViewController: UIViewController {
     var answer = ""
     private var guesses: [[Character?]] = Array(repeating: Array(repeating: nil, count: 5), count: 6)
     
-    var isRowConfirmed: Bool = false
+    private var rowConfirmed: [Bool] = Array(repeating: false, count: 6)
     var isRowCompleted: Bool = false
     
     let gameBoardVC = BoardViewController()
@@ -87,6 +87,7 @@ extension ViewController: KeyboardViewControllerDelegate {
     }
     
     private func addCharacter(_ letter: Character) {
+        
         var stop = false
         for i in 0..<guesses.count {
             for j in 0..<guesses[i].count {
@@ -100,28 +101,39 @@ extension ViewController: KeyboardViewControllerDelegate {
                 break
             }
         }
+        
+        let currentRowIndex = guesses.firstIndex(where: { $0.contains(nil) }) ?? 0
+            if !rowConfirmed[currentRowIndex] {
+                rowConfirmed[currentRowIndex] = false
+            }
+        
         isRowCompleted = isRowComplete()
     }
     
     private func removeLastCharacter() {
-        var stop = false
-        for i in (0..<guesses.count).reversed() {
-            for j in (0..<guesses[i].count).reversed() {
-                if guesses[i][j] != nil {
-                    guesses[i][j] = nil
-                    stop = true
+        guard let currentRowIndex = guesses.firstIndex(where: { $0.contains(nil) }) else {
+                return
+            }
+            
+            for j in (0..<guesses[currentRowIndex].count).reversed() {
+                if guesses[currentRowIndex][j] != nil {
+                    guesses[currentRowIndex][j] = nil
                     break
                 }
             }
-            if stop {
-                break
-            }
-        }
     }
     
     private func confirmCurrentRow() {
-        isRowConfirmed = true
-        gameBoardVC.reloadData()
+
+            for i in 0..<guesses.count {
+                if !rowConfirmed[i], guesses[i].compactMap({ $0 }).count == 5 {
+                    
+                    rowConfirmed[i] = true
+                    break
+                }
+            }
+            
+            gameBoardVC.reloadData()
     }
 }
 
@@ -134,9 +146,9 @@ extension ViewController: BoardViewControllerDataSource {
     func boxColor(at indexPath: IndexPath) -> UIColor? {
         let rowIndex = indexPath.section
         
-        guard isRowConfirmed else {
-            return nil
-        }
+        guard rowConfirmed[rowIndex] else {
+                return nil
+            }
         
         let count = guesses[rowIndex].compactMap({$0}).count
         guard count == 5 else {
