@@ -14,6 +14,9 @@ class ViewController: UIViewController {
     var answer = ""
     private var guesses: [[Character?]] = Array(repeating: Array(repeating: nil, count: 5), count: 6)
     
+    var isRowConfirmed: Bool = false
+    var isRowCompleted: Bool = false
+    
     let gameBoardVC = BoardViewController()
     let keyBoardVC = KeyboardViewController()
     
@@ -65,8 +68,26 @@ class ViewController: UIViewController {
 
 extension ViewController: KeyboardViewControllerDelegate {
     func keyboardViewController(_ vc: KeyboardViewController, didTapKey letter: Character) {
+        if letter == "⌫" {
+            removeLastCharacter()
+        } else if letter == "✓"{
+            confirmCurrentRow()
+            isRowCompleted = false
+        } else {
+            addCharacter(letter)
+        }
+        gameBoardVC.reloadData()
+    }
+    
+    private func isRowComplete() -> Bool {
+        guard let currentRow = guesses.first(where: { $0.contains(nil) }) else {
+            return true
+        }
+        return currentRow.compactMap({ $0 }).count == 5
+    }
+    
+    private func addCharacter(_ letter: Character) {
         var stop = false
-        
         for i in 0..<guesses.count {
             for j in 0..<guesses[i].count {
                 if guesses[i][j] == nil {
@@ -79,7 +100,27 @@ extension ViewController: KeyboardViewControllerDelegate {
                 break
             }
         }
-        
+        isRowCompleted = isRowComplete()
+    }
+    
+    private func removeLastCharacter() {
+        var stop = false
+        for i in (0..<guesses.count).reversed() {
+            for j in (0..<guesses[i].count).reversed() {
+                if guesses[i][j] != nil {
+                    guesses[i][j] = nil
+                    stop = true
+                    break
+                }
+            }
+            if stop {
+                break
+            }
+        }
+    }
+    
+    private func confirmCurrentRow() {
+        isRowConfirmed = true
         gameBoardVC.reloadData()
     }
 }
@@ -93,6 +134,10 @@ extension ViewController: BoardViewControllerDataSource {
     func boxColor(at indexPath: IndexPath) -> UIColor? {
         let rowIndex = indexPath.section
         
+        guard isRowConfirmed else {
+            return nil
+        }
+        
         let count = guesses[rowIndex].compactMap({$0}).count
         guard count == 5 else {
             return nil
@@ -105,8 +150,8 @@ extension ViewController: BoardViewControllerDataSource {
         }
         
         if !indexedAnswer.contains(letter) {
-                return .systemGray
-            }
+            return .systemGray
+        }
         
         if indexedAnswer[indexPath.row] == letter {
             return .systemGreen

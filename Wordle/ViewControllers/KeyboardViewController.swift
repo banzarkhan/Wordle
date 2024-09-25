@@ -15,10 +15,9 @@ class KeyboardViewController: UIViewController, UICollectionViewDelegate, UIColl
     
     weak var delegate: KeyboardViewControllerDelegate?
     
-    // Добавляем символы ✓ и ⌫ для checkmark и delete соответственно.
     let letters = ["йцукенгшщзхъ", "фывапролджэ", "✓ячсмитьбю⌫"]
     private var keys: [[Character]] = []
-
+    
     let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 2
@@ -33,7 +32,7 @@ class KeyboardViewController: UIViewController, UICollectionViewDelegate, UIColl
         super.viewDidLoad()
         collectionView.delegate = self
         collectionView.dataSource = self
-
+        
         view.addSubview(collectionView)
         NSLayoutConstraint.activate([
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
@@ -110,16 +109,8 @@ extension KeyboardViewController {
         collectionView.deselectItem(at: indexPath, animated: true)
         let letter = keys[indexPath.section][indexPath.row]
         
-        // Обрабатываем нажатие на кнопку checkmark или delete
-        if letter == "✓" {
-            // Обработка нажатия на checkmark
-            print("Checkmark tapped")
-        } else if letter == "⌫" {
-            // Обработка нажатия на delete
-            print("Delete tapped")
-        } else {
-            delegate?.keyboardViewController(self, didTapKey: letter)
-        }
+        delegate?.keyboardViewController(self, didTapKey: letter)
+        
     }
 }
 
